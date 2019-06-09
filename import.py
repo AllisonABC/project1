@@ -9,7 +9,25 @@ engine = create_engine(os.getenv("DATABASE_URL"))
 db = scoped_session(sessionmaker(bind=engine))
 
 def main():
+
     f = open("books.csv")
+
+    db.execute("CREATE TABLE authors (id SERIAL PRIMARY KEY, \
+            author VARCHAR NOT NULL)")
+    db.execute("CREATE TABLE books (id SERIAL PRIMARY KEY, \
+            isbn VARCHAR NOT NULL, \
+            title VARCHAR NOT NULL, \
+            author_id INTEGER REFERENCES authors, \
+            year INTEGER NOT NULL)")
+    db.execute("CREATE TABLE users (id SERIAL PRIMARY KEY, \
+            username VARCHAR NOT NULL, \
+            password VARCHAR(60) NOT NULL)")
+    db.execute("CREATE TABLE reviews (id SERIAL PRIMARY KEY, \
+            rating INTEGER NOT NULL, \
+            review VARCHAR NOT NULL, \
+            book_id INTEGER REFERENCES books, \
+            user_id INTEGER REFERENCES users)")
+
     reader = csv.reader(f)
     header = True # first line is header
     for isbn, title, author, year in reader:

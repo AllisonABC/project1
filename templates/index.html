@@ -5,27 +5,33 @@
 {% endblock %}
 
 {% block body %}
+
     <h1>Bestbooks</h1>
 
-    <form action="{{ url_for('login') }}" method="post">
+    Logged in as {{ username }}
+
+    <h3>Enter in one of the pieces of information</h3>
+
+    <form action="{{ url_for('search') }}" method="post">
 
         <div class="form-group">
-            <input class="form-control" name="username" placeholder="Username"
+            <input class="form-control" name="isbn" placeholder="Enter ISBN number"
         </div>
 
         <div class="form-group">
-            <input class="form-control" name="password" placeholder="Password">
+            <input class="form-control" name="author" placeholder="Enter author's name"
         </div>
 
         <div class="form-group">
-            <button class="btn btn-primary">Login</button>
+            <input class="form-control" name="title" placeholder="Enter title of book"
+        </div>
+
+        <div class="form-group">
+            <button class="btn btn-primary">Click to search</button>
         </div>
 
     </form>
 
-    <div>
-      <a href="{{ url_for('register') }}">
-          Click here to register
-      </a>
-    </div>
+    <b><a href = "{{ url_for('logout') }}">click here to log out</a></b>
+
 {% endblock %}
