@@ -100,8 +100,8 @@ def search():
             else:
                 return render_template("error.html", message="No books that match query")
 
-@app.route("/book/<int:book_id>")
-def book(book_id):
+@app.route("/search/<int:book_id>")
+def search(book_id):
     # Make sure flight exists.
     book = db.execute("SELECT books.id, isbn, title, year, author FROM books JOIN authors ON books.author_id=authors.id WHERE books.id = :id", {"id": book_id}).fetchone()
     if book is None:
