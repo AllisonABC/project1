@@ -102,20 +102,21 @@ def search():
 
 @app.route("/book/<int:book_id>")
 def book(book_id):
-
     # Make sure flight exists.
-    book = db.execute("SELECT * FROM books JOIN authors ON books.author_id=authors.id WHERE books.id = :id", {"id": book_id}).fetchone()
+    book = db.execute("SELECT books.id, isbn, title, year, author FROM books JOIN authors ON books.author_id=authors.id WHERE books.id = :id", {"id": book_id}).fetchone()
     if book is None:
         return render_template("error.html", message="No such book.")
-
+    print("later in book\n")
     return render_template("book.html", book=book)
 
 @app.route("/review/<int:book_id>", methods=["POST"])
 def review(book_id):
     if 'username' in session:
         username = session['username']
+    print("in review")
     user_id = db.execute("SELECT id FROM users WHERE username=:username",
-            {"username: username"}).fetchone()[]['id']
+            {"username: username"}).fetchone()
+    print("in review")
     rating = request.form.get("rating")
     review = request.form.get("review")
     db.execute("INSERT INTO reviews (rating, review, book_id, user_id) \
