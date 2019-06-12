@@ -86,7 +86,6 @@ def search():
         return render_template("results.html", matches=matches)
     else:
         author = request.form.get("author").lower()
-        print(author)
         if author != "":
             matches = db.execute("SELECT books.id, isbn, title, year, author FROM books JOIN authors ON books.author_id = authors.id WHERE LOWER(author) LIKE :author",
                     {"author": '%'+author+'%'}).fetchall()
@@ -100,32 +99,55 @@ def search():
             else:
                 return render_template("error.html", message="No books that match query")
 
-@app.route("/search/<int:book_id>")
-def search(book_id):
+@app.route("/book/<int:book_id>")
+def book(book_id):
     # Make sure flight exists.
     book = db.execute("SELECT books.id, isbn, title, year, author FROM books JOIN authors ON books.author_id=authors.id WHERE books.id = :id", {"id": book_id}).fetchone()
+    reviews = db.execute("SELECT books.id, review FROM books JOIN reviews ON books.id = reviews.book_id WHERE books.id = :id",
+            {"id": book_id}).fetchall()
+    isbn = book['isbn']
+    res = requests.get("https://www.goodreads.com/book/review_counts.json",
+            params={"key": "FaPR4QA2NGvLSuI9nVKw", "isbns": isbn})
+    json_response=res.json()
+    rating_count=json_response['books'][0]['ratings_count']
+    average_rating=json_response['books'][0]['average_rating']
     if book is None:
         return render_template("error.html", message="No such book.")
-    print("later in book\n")
-    return render_template("book.html", book=book)
+    return render_template("book.html", book=book, reviews=reviews, \
+            rating_count=rating_count, average_rating=average_rating)
 
 @app.route("/review/<int:book_id>", methods=["POST"])
 def review(book_id):
+    print("in review")
     if 'username' in session:
         username = session['username']
     print("in review")
     user_id = db.execute("SELECT id FROM users WHERE username=:username",
-            {"username: username"}).fetchone()
-    print("in review")
+            {"username": username}).fetchone()[0]
+    print("in review, user_id = ", user_id)
     rating = request.form.get("rating")
     review = request.form.get("review")
-    db.execute("INSERT INTO reviews (rating, review, book_id, user_id) \
-            VALUES (:rating, :review, :book_id, :user_id)",
+    print("\n rating = ", rating, " review = ", review, "\n")
+    db.execute("INSERT INTO reviews (rating, review, book_id, user_id) VALUES (:rating, :review, :book_id, :user_id)",
             {"rating": rating, "review": review, "book_id":book_id, "user_id":user_id})
+    db.commit()
+    return render_template("index.html")
 
-"""
-@app.route("/api/<string:isbn")
-def api():
+
+@app.route("/api/<string:isbn>")
+def api(isbn):
     res = requests.get("https://www.goodreads.com/book/review_counts.json",
             params={"key": "FaPR4QA2NGvLSuI9nVKw", "isbns": isbn})
-    res.json()"""
+    matches = db.execute("SELECT title, year, author FROM books JOIN authors ON books.author_id = authors.id WHERE isbn=:isbn",
+            {"isbn": isbn}).fetchone()
+    title = matches['title']
+    year = matches['year']
+    author = matches['author']
+    json_response=res.json()
+    review_count=json_response['books'][0]['reviews_count']
+    average_score=json_response['books'][0]['average_rating']
+    new_json = "{\"title\": "+title+",\"author\": "+author+\
+            ",\"year\": "+str(year)+",\"isbn\": "+isbn+\
+            ",\"review_count\": "+str(review_count)+\
+            ",\"average_score\": " + str(average_score)+"}"
+    return render_template("details.html", items=new_json)
