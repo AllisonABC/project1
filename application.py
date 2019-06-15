@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, render_template, request, session, redirect, url_for
+from flask import Flask, render_template, request, session, redirect, url_for, jsonify
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -146,8 +146,7 @@ def api(isbn):
     json_response=res.json()
     review_count=json_response['books'][0]['reviews_count']
     average_score=json_response['books'][0]['average_rating']
-    new_json = "{\"title\": "+title+",\"author\": "+author+\
-            ",\"year\": "+str(year)+",\"isbn\": "+isbn+\
-            ",\"review_count\": "+str(review_count)+\
-            ",\"average_score\": " + str(average_score)+"}"
-    return render_template("details.html", items=new_json)
+    return jsonify({"title": title, "author": author, \
+            "year": year, "isbn": isbn ,"review_count": review_count, \
+            "average_score": average_score})
+    #return render_template("details.html", items=new_json)
